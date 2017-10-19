@@ -6,6 +6,16 @@ var upload = multer();
 // 文件处理模块
 var fs = require('fs');
 
+// 数据库模块
+var mongoose = require('mongoose');
+	require('./server/connect.js');
+	require('./server/model.js');
+
+// 获取 users 集合并指向 Messages 
+var Users = mongoose.model('users');
+mongoose.Promise = global.Promise;
+
+
 // 上传文件配置地址
 var config = require('./config/config.js');
 var AvatarPath_BASE = __dirname + config.AvatarPath;
@@ -30,13 +40,27 @@ app.post('/api/avatar_upload', upload.single('avatar'), function(req,res,next) {
 		var name = req.body.avatarName;
 		// 存哪里, 取什么名字。
 		var fileFormat = req.file.originalname.split('.');
+		// 远程访问地址
+		var remoteAvatar = 'http://static.emlice.top/images/users/' + name + '.' + fileFormat[fileFormat.length - 1];
 		var avatarName = AvatarPath_BASE + name + '.' + fileFormat[fileFormat.length - 1];
 		// 写入磁盘
 		fs.writeFile(avatarName, req.file.buffer, function(err) {
 			if(err) {
 				res.send({ Code: -1, Str: '文件上传失败！' });
 			} else {
-				res.send({ Code: 0, Str: '文件上传成功！' });
+				// 要查询的用户
+				var query = { name: name };
+				// 如何更新修改
+				var newVal = { $set: { avatar: remoteAvatar } };
+				// 数据库更新
+				Users.update(query, newVal, function(err,result) {
+					if(err) {
+						console.log('头像更新失败！');
+					} else {
+						console.log('头像更新成功！');
+					}
+				});
+				res.send({ Code: 0, Str: '文件上传成功！', Avatar: remoteAvatar });
 			}
 		});
 	}
