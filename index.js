@@ -20,6 +20,9 @@ mongoose.Promise = global.Promise;
 var config = require('./config/config.js');
 var AvatarPath_BASE = __dirname + config.AvatarPath;
 
+// 静态资源服务器地址配置
+var STATIC_SERVER = config.STATIC_SERVER;
+
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -41,7 +44,7 @@ app.post('/api/avatar_upload', upload.single('avatar'), function(req,res,next) {
 		// 存哪里, 取什么名字。
 		var fileFormat = req.file.originalname.split('.');
 		// 远程访问地址
-		var remoteAvatar = 'http://static.emlice.top/images/users/' + name + '.' + fileFormat[fileFormat.length - 1];
+		var remoteAvatar = STATIC_SERVER + '/images/users/' + name + '.' + fileFormat[fileFormat.length - 1];
 		var avatarName = AvatarPath_BASE + name + '.' + fileFormat[fileFormat.length - 1];
 		// 写入磁盘
 		fs.writeFile(avatarName, req.file.buffer, function(err) {
