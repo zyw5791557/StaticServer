@@ -45,8 +45,10 @@ app.post('/api/avatar_upload', upload.single('avatar'), function(req,res,next) {
 		var name = req.body.avatarName;
 		// 存哪里, 取什么名字。
 		var fileFormat = req.file.originalname.split('.');
+		// 设置头像的时间。
+		var date = Date.now();
 		// 远程访问地址
-		var remoteAvatar = STATIC_SERVER + '/images/users/' + name + '.' + fileFormat[fileFormat.length - 1];
+		var remoteAvatar = STATIC_SERVER + '/images/users/' + name + '.' + fileFormat[fileFormat.length - 1] + '?' + date;
 		var avatarName = AvatarPath_BASE + name + '.' + fileFormat[fileFormat.length - 1];
 		// 写入磁盘
 		fs.writeFile(avatarName, req.file.buffer, function(err) {
