@@ -11,8 +11,10 @@ var mongoose = require('mongoose');
 	require('./server/connect.js');
 	require('./server/model.js');
 
-// 获取 users 集合并指向 Messages 
+// 获取 users 集合并指向 users 
 var Users = mongoose.model('users');
+// 获取 messages 集合并指向 Messages 
+var Messages = mongoose.model('messages');
 mongoose.Promise = global.Promise;
 
 
@@ -65,6 +67,11 @@ app.post('/api/avatar_upload', upload.single('avatar'), function(req,res,next) {
 						console.log('头像更新失败！');
 					} else {
 						console.log('头像更新成功！');
+                        // 更新数据库 Messages 表下改用户的头像信息
+                        Messages.updateMany({from: name}, { $set: { avatar: remoteAvatar } }, {}, function(err, rres) {
+                            if(err) throw err;
+                            console.log(`${name}用户消息修改结果：`,rres);
+                        });
 					}
 				});
 				res.send({ Code: 0, Str: '文件上传成功！', Avatar: remoteAvatar });
