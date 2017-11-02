@@ -6,6 +6,9 @@ var upload = multer();
 // 文件处理模块
 var fs = require('fs');
 
+// 子进程
+var child = require('child_process');
+
 // 数据库模块
 var mongoose = require('mongoose');
 	require('./server/connect.js');
@@ -103,6 +106,41 @@ app.post('/api/ps_upload', upload.single('ps'), function(req,res,next) {
 			}
 		});
 	}
+});
+
+
+// 清空截图和消息表
+app.post('/api/clearData', function(req,res) {
+	var str = '';
+	req.on('data', function(chunk) {
+		str += chunk;
+	});
+	req.on('end', function() {
+		var data = JSON.parse(str);
+		var user = data.user;
+		if(user === 'Emlice') {
+			// 删除 Messages 表数据
+			Messages.deleteMany({},function(err,handleResult) {
+				if(err) {
+					res.send({ Code: -1, Str: '数据删除失败！' });
+					throw err;
+				}
+				console.log('数据库删除成功,删除信息：', handleResult);
+				// 删除截图数据
+				child.exec('rm -rf assets/images/printscreen/*',function(err,out) {
+					if(err) {
+						res.send({ Code: -1, Str: '数据删除失败！' });
+						throw err;
+					}
+					console.log('截图数据删除成功,删除信息：',out); 
+					res.send({ Code: 0, Str: '数据删除成功！' });
+				});
+			});
+		} else {
+			res.send({ Code: -2, Str: '您没有该权限！' });
+		}
+	});
+	
 });
 
 app.listen(8989);
