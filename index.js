@@ -21,10 +21,16 @@ var Messages = mongoose.model('messages');
 mongoose.Promise = global.Promise;
 
 
+// 加密
+var crypto = require('crypto');
+var $salt = '^ThisisEmliceChat$';           // 简单的静态加盐
+
+
 // 上传文件配置地址
 var config = require('./config/config.js');
-var AvatarPath_BASE = __dirname + config.AvatarPath;
+var AvatarPath_BASE 	= __dirname + config.AvatarPath;
 var MessageImgPath_BASE = __dirname + config.MessageImgPath;
+var permissionArr 		= config.permissionArr;
 
 // 静态资源服务器地址配置
 var STATIC_SERVER = config.STATIC_SERVER;
@@ -116,9 +122,26 @@ app.post('/api/clearData', function(req,res) {
 		str += chunk;
 	});
 	req.on('end', function() {
-		var data = JSON.parse(str);
-		var user = data.user;
-		if(user === 'Emlice') {
+		var data  = JSON.parse(str);
+		var user  = data.user;
+		var token = data.token;
+
+		if(token === undefined) {
+			res.send({ Code: -2, Str: '您没有该权限！' });
+			return;
+		}
+
+        // 使用 sha1 加密算法
+		var sha1Res;
+        if(permissionArr.indexOf(user) !== -1) {
+        	sha1Res = crypto.createHash('sha1').update($salt + user).digest('hex');
+
+        }else {
+        	res.send({ Code: -2, Str: '您没有该权限！' });
+        	return;
+        }
+
+		if(sha1Res === token) {
 			// 删除 Messages 表数据
 			Messages.deleteMany({},function(err,handleResult) {
 				if(err) {
