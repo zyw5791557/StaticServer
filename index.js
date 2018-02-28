@@ -166,4 +166,30 @@ app.post('/api/clearData', function(req,res) {
 	
 });
 
+
+const http = require('http');
+const url  = require('url');
+
+// 图片防盗链处理
+app.get( '/api/imgload', function (req, rres) {
+    var imgURL = req.query.url
+    var urlParse = url.parse(imgURL);
+    var hostname = urlParse.hostname;
+    // req.header('Access-Control-Allow-Origin','*');
+    // req.header('Content-type', 'image/*;charset=UTF-8');
+    http.request({
+        hostname: hostname,
+        port: 80,
+        path: imgURL,
+        method: req.method
+    }, function (res) {
+        res.on('data', function (data) {
+            rres.write(data);
+        });
+        res.on('end', function () {
+            rres.end();
+        });
+    }).end();
+});
+
 app.listen(8989);
